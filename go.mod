@@ -2,7 +2,11 @@ module github.com/sjpau/passage
 
 go 1.20
 
-require github.com/hajimehoshi/ebiten/v2 v2.5.4
+require (
+	github.com/hajimehoshi/ebiten/v2 v2.5.4
+	github.com/tinne26/etxt v0.0.8
+	github.com/tinne26/fonts/liberation/lbrtserif v0.0.0-20230317183620-0b634734e4ec
+)
 
 require (
 	github.com/ebitengine/purego v0.3.0 // indirect
@@ -13,4 +17,5 @@ require (
 	golang.org/x/mobile v0.0.0-20230301163155-e0f57694e12c // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
+	golang.org/x/text v0.8.0 // indirect
 )
