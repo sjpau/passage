@@ -14,3 +14,7 @@ const (
 	STATE_GAME
 	STATE_HOWTO
 )
+
+const fontSize = 72
+const verticalSP = fontSize + 5
+const horizontalSP = fontSize + 5

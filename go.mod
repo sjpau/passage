@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/hajimehoshi/ebiten/v2 v2.5.4
+	github.com/sjpau/vector v0.0.0-20230530101433-282a74b42b3f
 	github.com/tinne26/etxt v0.0.8
 	github.com/tinne26/fonts/liberation/lbrtserif v0.0.0-20230317183620-0b634734e4ec
 )

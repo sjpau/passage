@@ -1,7 +1,6 @@
 package state
 
 import (
-	"image/color"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -31,9 +30,6 @@ const (
 	QUIT
 )
 
-const fontSize = 72
-const verticalSP = fontSize + 5
-
 func (m *Menu) Change() int {
 	if m.changeState {
 		m.changeState = false
@@ -49,7 +45,7 @@ func (m *Menu) Init() {
 	renderer.SetFont(lbrtserif.Font())
 	cache := etxt.NewDefaultCache(1024 * 1024)
 	renderer.SetCacheHandler(cache.NewHandler())
-	renderer.SetColor(color.RGBA{164, 57, 57, 255})
+	renderer.SetColor(graphics.COLOR_RED)
 	renderer.SetSizePx(int(fontSize * ebiten.DeviceScaleFactor()))
 	renderer.SetAlign(etxt.YCenter, etxt.XCenter)
 	m.text = renderer
