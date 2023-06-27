@@ -44,6 +44,15 @@ var lvlCharMap = map[int]string{
 	5: charLeft,
 }
 
+var reverseMap = map[int]int{
+	0: 1,
+	1: 0,
+	2: 3,
+	3: 2,
+	4: 5,
+	5: 4,
+}
+
 func (g *Gameplay) Change() int {
 	if g.changeState {
 		g.changeState = false
@@ -76,10 +85,53 @@ func (g *Gameplay) Init() {
 
 }
 
+func (g *Gameplay) RestartCurrentLevel() {
+	g.currentLayout = CopyLayout(g.lvls[0].Layout)
+}
+
+func (g *Gameplay) ReverseCurrentChar() {
+	currentValue := g.currentLayout[int(g.currentChar.Y)][int(g.currentChar.X)]
+	reversedValue, exists := reverseMap[currentValue]
+
+	if currentValue == 0 || currentValue == 1 {
+		for i := 0; i < len(g.currentLayout); i++ {
+			for j := 0; j < len(g.currentLayout[i]); j++ {
+				if g.currentLayout[i][j] == 1-currentValue {
+					g.currentLayout[i][j] = currentValue
+				}
+			}
+		}
+	}
+
+	if exists {
+		g.currentLayout[int(g.currentChar.Y)][int(g.currentChar.X)] = reversedValue
+	}
+}
+
+func CopyLayout(lin [][]int) [][]int {
+	rows := len(lin)
+	cols := len(lin)
+	var lout [][]int
+	lout = make([][]int, rows)
+	for i := range lout {
+		lout[i] = make([]int, cols)
+	}
+
+	for i := 0; i < rows; i++ {
+		for j := 0; j < cols; j++ {
+			lout[i][j] = lin[i][j]
+		}
+	}
+	return lout
+}
+
 func (g *Gameplay) Update() {
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		g.changeStateTo = STATE_MENU
 		g.changeState = true
+	}
+	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
+		g.RestartCurrentLevel()
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyD) {
 		g.currentChar.X += 1
@@ -92,6 +144,9 @@ func (g *Gameplay) Update() {
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyW) {
 		g.currentChar.Y -= 1
+	}
+	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+		g.ReverseCurrentChar()
 	}
 	rows := len(g.lvls[0].Layout)
 	cols := len(g.lvls[0].Layout[0])
@@ -114,14 +169,14 @@ func (g *Gameplay) Draw(screen *ebiten.Image) {
 	bounds := screen.Bounds()
 	x, y := bounds.Dx()/2, bounds.Dy()/2
 	if g.assignLayout {
-		g.currentLayout = g.lvls[0].Layout
+		g.currentLayout = CopyLayout(g.lvls[0].Layout)
 		g.assignLayout = false
 	}
 
 	rows := len(g.currentLayout)
 	cols := len(g.currentLayout[0])
 
-	//Calculations so that matrix is drawn around the center of it's "middle" element
+	//Calculations so that matrix is drawn around the center of it's "center" element
 	startX := x - (cols/2)*horizontalSP
 	startY := y - (rows/2)*verticalSP
 
