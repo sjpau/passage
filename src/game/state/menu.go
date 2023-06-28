@@ -67,6 +67,8 @@ func (m *Menu) Update() {
 			m.changeState = true
 			break
 		case HOWTO:
+			m.changeStateTo = STATE_HOWTO
+			m.changeState = true
 			break
 		case QUIT:
 			os.Exit(0)

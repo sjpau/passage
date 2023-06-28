@@ -22,6 +22,7 @@ func main() {
 	ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
 	ebiten.SetCursorShape(ebiten.CursorShapeCrosshair)
 	ebiten.SetWindowTitle("The Passage")
+	ebiten.SetWindowResizable(true)
 	g := game.NewGame(&lvlFS)
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)

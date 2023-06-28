@@ -4,7 +4,6 @@ import (
 	"embed"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -25,9 +24,11 @@ type Gameplay struct {
 	assignLayout  bool
 	currentLayout [][]int
 	currentLvl    int
+	lvlName       string
 	reverses      int
 	currentChar   *vector.Vector2D
 	lvlCompleted  bool
+	ableToPass    bool
 }
 
 const (
@@ -135,7 +136,7 @@ func (g *Gameplay) Init() {
 func (g *Gameplay) FindInLayout(value int) [][]int {
 	var positions [][]int
 
-	for i, row := range g.lvls[g.currentLvl].Layout {
+	for i, row := range g.currentLayout {
 		for j, v := range row {
 			if v == value {
 				positions = append(positions, []int{i, j})
@@ -200,7 +201,7 @@ func (g *Gameplay) TraversePathFrom(pos *vector.Vector2D) bool {
 			log.Print("Checking code: ", code)
 			if nextValue == codeExit {
 				log.Print("Found exit!")
-				g.lvlCompleted = true
+				g.ableToPass = true
 				return true
 			} else if nextValue == code {
 				log.Print("Able to pass.")
@@ -215,7 +216,7 @@ func (g *Gameplay) TraversePathFrom(pos *vector.Vector2D) bool {
 
 func (g *Gameplay) FindPassage() {
 	pos := g.FindInLayout(codeStart)
-	current := vector.Vector2D{X: float64(pos[0][0]), Y: float64(pos[0][1])}
+	current := vector.Vector2D{X: float64(pos[0][1]), Y: float64(pos[0][0])}
 
 	directions := []vector.Vector2D{up, down, right, left}
 
@@ -261,8 +262,10 @@ func (g *Gameplay) Update() {
 		log.Print("Level successfully completed!")
 		g.assignLayout = true
 		g.currentLvl++
-		if g.currentLvl > len(g.lvls) {
-			os.Exit(1)
+		if g.currentLvl > len(g.lvls)-1 {
+			g.changeStateTo = STATE_WIN
+			g.changeState = true
+			g.currentLvl = 0
 		}
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
@@ -294,6 +297,9 @@ func (g *Gameplay) Update() {
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyEnter) {
 		g.FindPassage()
+		if g.ableToPass {
+			g.lvlCompleted = true
+		}
 	}
 
 	rows := len(g.lvls[g.currentLvl].Layout)
@@ -319,10 +325,12 @@ func (g *Gameplay) Draw(screen *ebiten.Image) {
 	if g.assignLayout {
 		g.currentLayout = CopyLayout(g.lvls[g.currentLvl].Layout)
 		g.reverses = g.lvls[g.currentLvl].Reverses
+		g.lvlName = g.lvls[g.currentLvl].Name
 		startPos := g.FindInLayout(codeStart)
 		g.currentChar.X, g.currentChar.Y = float64(startPos[0][1]), float64(startPos[0][0])
 		g.assignLayout = false
 		g.lvlCompleted = false
+		g.ableToPass = false
 	}
 
 	rows := len(g.currentLayout)
@@ -331,7 +339,7 @@ func (g *Gameplay) Draw(screen *ebiten.Image) {
 	//Calculations so that matrix is drawn around the center of it's "center" element
 	startX := x - (cols/2)*horizontalSP
 	startY := y - (rows/2)*verticalSP
-
+	//if it works it works.
 	g.text.SetAlign(etxt.YCenter, etxt.XCenter)
 	g.text.SetSizePx(int(fontSize * ebiten.DeviceScaleFactor()))
 	for i, row := range g.currentLayout {
@@ -357,5 +365,9 @@ func (g *Gameplay) Draw(screen *ebiten.Image) {
 	}
 	g.text.SetAlign(etxt.YCenter, etxt.XCenter)
 	g.text.Draw(reversesLeft, x, fontSize/2)
+	if g.ableToPass {
+		g.text.SetColor(graphics.COLOR_PINK)
+	}
+	g.text.Draw(g.lvlName, x, y*2-fontSize/2)
 
 }

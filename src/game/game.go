@@ -15,7 +15,7 @@ type Game struct {
 
 func NewGame(lvlFS *embed.FS) *Game {
 	g := &Game{
-		states:       []state.State{&state.Menu{}, &state.Gameplay{LvlFS: lvlFS}},
+		states:       []state.State{&state.Menu{}, &state.Gameplay{LvlFS: lvlFS}, &state.Howto{}, &state.Win{}},
 		currentState: state.STATE_MENU,
 	}
 	for i := range g.states {

@@ -13,6 +13,7 @@ const (
 	STATE_MENU = iota
 	STATE_GAME
 	STATE_HOWTO
+	STATE_WIN
 )
 
 const fontSize = 72
