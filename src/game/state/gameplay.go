@@ -2,6 +2,7 @@ package state
 
 import (
 	"embed"
+	"fmt"
 	"log"
 	"os"
 
@@ -24,6 +25,7 @@ type Gameplay struct {
 	assignLayout  bool
 	currentLayout [][]int
 	currentLvl    int
+	reverses      int
 	currentChar   *vector.Vector2D
 	lvlCompleted  bool
 }
@@ -111,7 +113,23 @@ func (g *Gameplay) Init() {
 	lvlEscape, e := lvl.LoadFromJSON(g.LvlFS, basePath+"escape.json")
 	log.Print(lvlEscape)
 	help.Check(e)
+	lvlRedemption, e := lvl.LoadFromJSON(g.LvlFS, basePath+"redemption.json")
+	log.Print(lvlRedemption)
+	help.Check(e)
+	lvlPressure, e := lvl.LoadFromJSON(g.LvlFS, basePath+"pressure.json")
+	log.Print(lvlPressure)
+	help.Check(e)
+	lvlDarkness, e := lvl.LoadFromJSON(g.LvlFS, basePath+"darkness.json")
+	log.Print(lvlDarkness)
+	help.Check(e)
+	lvlFallout, e := lvl.LoadFromJSON(g.LvlFS, basePath+"fallout.json")
+	log.Print(lvlFallout)
+	help.Check(e)
 	g.lvls = append(g.lvls, lvlEscape)
+	g.lvls = append(g.lvls, lvlRedemption)
+	g.lvls = append(g.lvls, lvlPressure)
+	g.lvls = append(g.lvls, lvlDarkness)
+	g.lvls = append(g.lvls, lvlFallout)
 }
 
 func (g *Gameplay) FindInLayout(value int) [][]int {
@@ -129,6 +147,7 @@ func (g *Gameplay) FindInLayout(value int) [][]int {
 
 func (g *Gameplay) RestartCurrentLevel() {
 	g.currentLayout = CopyLayout(g.lvls[g.currentLvl].Layout)
+	g.reverses = g.lvls[g.currentLvl].Reverses
 }
 
 func (g *Gameplay) ReverseCurrentChar() {
@@ -202,6 +221,7 @@ func (g *Gameplay) FindPassage() {
 
 	availablePaths := []*vector.Vector2D{}
 	for _, dir := range directions {
+		log.Print("Adding direction to: ", current)
 		next := current.Add(&dir)
 		log.Print("Checking direction: ", dir)
 		log.Print("Checking path: ", next)
@@ -239,7 +259,11 @@ func (g *Gameplay) PosInLayoutBounds(pos *vector.Vector2D) bool {
 func (g *Gameplay) Update() {
 	if g.lvlCompleted {
 		log.Print("Level successfully completed!")
-		os.Exit(1)
+		g.assignLayout = true
+		g.currentLvl++
+		if g.currentLvl > len(g.lvls) {
+			os.Exit(1)
+		}
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		g.changeStateTo = STATE_MENU
@@ -264,8 +288,9 @@ func (g *Gameplay) Update() {
 		g.currentChar.Y -= 1
 		log.Print(g.currentChar)
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+	if inpututil.IsKeyJustPressed(ebiten.KeySpace) && g.reverses > 0 {
 		g.ReverseCurrentChar()
+		g.reverses--
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyEnter) {
 		g.FindPassage()
@@ -292,9 +317,10 @@ func (g *Gameplay) Draw(screen *ebiten.Image) {
 	bounds := screen.Bounds()
 	x, y := bounds.Dx()/2, bounds.Dy()/2
 	if g.assignLayout {
-		g.currentLayout = CopyLayout(g.lvls[0].Layout)
+		g.currentLayout = CopyLayout(g.lvls[g.currentLvl].Layout)
+		g.reverses = g.lvls[g.currentLvl].Reverses
 		startPos := g.FindInLayout(codeStart)
-		g.currentChar.X, g.currentChar.Y = float64(startPos[0][0]), float64(startPos[0][1])
+		g.currentChar.X, g.currentChar.Y = float64(startPos[0][1]), float64(startPos[0][0])
 		g.assignLayout = false
 		g.lvlCompleted = false
 	}
@@ -306,6 +332,8 @@ func (g *Gameplay) Draw(screen *ebiten.Image) {
 	startX := x - (cols/2)*horizontalSP
 	startY := y - (rows/2)*verticalSP
 
+	g.text.SetAlign(etxt.YCenter, etxt.XCenter)
+	g.text.SetSizePx(int(fontSize * ebiten.DeviceScaleFactor()))
 	for i, row := range g.currentLayout {
 		for j, value := range row {
 			if i == int(g.currentChar.Y) && j == int(g.currentChar.X) {
@@ -316,4 +344,18 @@ func (g *Gameplay) Draw(screen *ebiten.Image) {
 			g.text.Draw(lvlCharMap[value], startX+j*horizontalSP, startY+i*verticalSP)
 		}
 	}
+	g.text.SetSizePx(int(fontSize / 2 * ebiten.DeviceScaleFactor()))
+	g.text.SetColor(graphics.COLOR_RED)
+	g.text.SetAlign(etxt.Top, etxt.Left)
+	g.text.Draw("Esc", 0, 0)
+
+	var reversesLeft string
+	if g.reverses > 0 {
+		reversesLeft = fmt.Sprintf("Reverses left: %d\n", g.reverses)
+	} else {
+		reversesLeft = fmt.Sprintf("Press R to restart\n")
+	}
+	g.text.SetAlign(etxt.YCenter, etxt.XCenter)
+	g.text.Draw(reversesLeft, x, fontSize/2)
+
 }

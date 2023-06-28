@@ -9,8 +9,9 @@ import (
 )
 
 type Level struct {
-	Name   string  `json:"name"`
-	Layout [][]int `json:"layout"`
+	Name     string  `json:"name"`
+	Reverses int     `json:"reverses"`
+	Layout   [][]int `json:"layout"`
 }
 
 func LoadFromJSON(fs *embed.FS, filePath string) (*Level, error) {
