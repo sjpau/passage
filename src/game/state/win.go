@@ -50,7 +50,7 @@ func (w *Win) Draw(screen *ebiten.Image) {
 	bounds := screen.Bounds()
 	x, y := bounds.Dx()/2, bounds.Dy()/2
 	w.text.SetAlign(etxt.YCenter, etxt.XCenter)
-	txt := fmt.Sprintf("You have finished the game!.\nYep, that's it.\nThanks for playing!")
+	txt := fmt.Sprintf("You have finished the game!\nYep, that's it.\nThanks for playing!")
 	w.text.Draw(txt, x, y)
 	w.text.SetAlign(etxt.Top, etxt.Left)
 	w.text.Draw("Esc", 0, 0)
