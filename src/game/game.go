@@ -1,17 +1,29 @@
 package game
 
 import (
+	"bytes"
 	"embed"
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/audio"
+	"github.com/hajimehoshi/ebiten/v2/audio/vorbis"
 	"github.com/sjpau/passage/src/game/state"
+	"github.com/sjpau/passage/src/help"
+	"github.com/sjpau/passage/src/sfx"
 )
 
 type Game struct {
 	states       []state.State
 	currentState int
+	audioPlayer  *audio.Player
+	audioContext *audio.Context
 }
+
+const (
+	sampleRate     = 44100
+	bytesPerSample = 4
+)
 
 func NewGame(lvlFS *embed.FS) *Game {
 	g := &Game{
@@ -25,6 +37,25 @@ func NewGame(lvlFS *embed.FS) *Game {
 }
 
 func (self *Game) Update() error {
+	go func() error {
+		if self.audioPlayer != nil {
+			return nil
+		}
+
+		if self.audioContext == nil {
+			self.audioContext = audio.NewContext(sampleRate)
+		}
+
+		sfx_hfe, e := vorbis.DecodeWithoutResampling(bytes.NewReader(sfx.Here_for_eternity))
+		help.Check(e)
+		s := audio.NewInfiniteLoop(sfx_hfe, 15*bytesPerSample*sampleRate)
+
+		self.audioPlayer, e = self.audioContext.NewPlayer(s)
+		help.Check(e)
+
+		self.audioPlayer.Play()
+		return nil
+	}()
 	self.states[self.currentState].Update()
 	changeStatus := self.states[self.currentState].Change()
 	if changeStatus != -1 {
